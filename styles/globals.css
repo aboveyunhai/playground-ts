@@ -1,0 +1,9 @@
+/* temp solution for Sandpack css when using customize UI */
+
+.sp-wrapper {
+  width: 100%;
+}
+
+.sp-stack {
+  min-height: 500px;
+}
