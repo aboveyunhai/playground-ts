@@ -1,15 +1,30 @@
-import { SandpackCodeEditor, useSandpack } from "@codesandbox/sandpack-react";
+import {
+  SandpackCodeEditor,
+  useActiveCode,
+  useSandpack,
+} from "@codesandbox/sandpack-react";
 
 import { EventEmitter } from "@okikio/emitter";
 import { codemirrorTypescriptExtensions } from "./codemirror-extensions";
-import React, { memo, useEffect } from "react";
+import React, { useEffect, useImperativeHandle } from "react";
 import type { MutableRefObject } from "react";
+import { format } from "prettier";
+import parserTypeScript from "prettier/parser-typescript";
 
-export const CodeEditor: React.FC<{
+export interface CustomCodeEditorProps {
   activePath?: string;
   tsServer: MutableRefObject<Worker>;
   emitter: MutableRefObject<EventEmitter>;
-}> = memo(({ activePath, tsServer, emitter }) => {
+}
+
+export type ForwardRefProps = {
+  formatCode: () => void;
+};
+
+const CodeEditorRef = React.forwardRef<
+  ForwardRefProps,
+  React.PropsWithChildren<CustomCodeEditorProps>
+>(({ activePath, tsServer, emitter }, ref) => {
   const { sandpack } = useSandpack();
 
   const extensions = codemirrorTypescriptExtensions(
@@ -17,6 +32,19 @@ export const CodeEditor: React.FC<{
     emitter.current,
     activePath
   );
+
+  const { code, updateCode } = useActiveCode();
+
+  useImperativeHandle(ref, () => ({
+    formatCode() {
+      const formattedCode = format(code, {
+        semi: false,
+        parser: "typescript",
+        plugins: [parserTypeScript],
+      });
+      updateCode(formattedCode);
+    },
+  }));
 
   useEffect(function init() {
     emitter.current.on("ready", () => {
@@ -56,3 +84,5 @@ export const CodeEditor: React.FC<{
 
   return <SandpackCodeEditor showTabs extensions={extensions} />;
 });
+
+export const CodeEditor = React.memo(CodeEditorRef);

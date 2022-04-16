@@ -1,3 +1,4 @@
+import { Box, Button } from "@chakra-ui/react";
 import {
   SandpackConsumer,
   SandpackLayout,
@@ -10,18 +11,21 @@ import {
 } from "@codesandbox/sandpack-react";
 import EventEmitter from "@okikio/emitter";
 import { useRef, useEffect } from "react";
-import { CodeEditor } from "./CodeEditor";
+import { Preview } from "../Preview";
+import { CodeEditor, ForwardRefProps } from "./CodeEditor";
 
 export interface SandpackTypescriptProps {
   customSetup: SandpackSetup;
   template: SandpackPredefinedTemplate;
   theme?: SandpackThemeProp;
+  codeEditorRef?: React.MutableRefObject<ForwardRefProps>;
 }
 
 export const SandpackTypescript: React.FC<SandpackTypescriptProps> = ({
   customSetup,
   template,
-  theme
+  theme,
+  codeEditorRef,
 }) => {
   const tsServer = useRef<Worker>(null);
   const emitter = useRef<EventEmitter>(null);
@@ -59,16 +63,23 @@ export const SandpackTypescript: React.FC<SandpackTypescriptProps> = ({
       <SandpackThemeProvider>
         <SandpackLayout theme={theme}>
           <SandpackConsumer>
-            {(state) => tsServer.current && emitter.current && (
-              <CodeEditor
-                activePath={state?.activePath}
-                tsServer={tsServer}
-                emitter={emitter}
-              />
-            )}
+            {(state) =>
+              tsServer.current &&
+              emitter.current && (
+                <CodeEditor
+                  activePath={state?.activePath}
+                  tsServer={tsServer}
+                  emitter={emitter}
+                  ref={codeEditorRef}
+                />
+              )
+            }
           </SandpackConsumer>
-          <SandpackPreview />
+          {/* <Box padding={"10px"} width="500px"> */}
+            <SandpackPreview />
+          {/* </Box> */}
         </SandpackLayout>
+        {/* <Preview /> */}
       </SandpackThemeProvider>
     </SandpackProvider>
   );
