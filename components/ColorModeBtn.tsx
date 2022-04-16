@@ -1,10 +1,15 @@
 import React from "react";
-import { IconButton, useColorMode, useColorModeValue } from "@chakra-ui/react";
+import {
+  IconButton,
+  IconButtonProps,
+  useColorMode,
+  useColorModeValue,
+} from "@chakra-ui/react";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 
 interface ColorModeBtnProps {}
 
-export const ColorModeBtn: React.FC<ColorModeBtnProps> = ({}) => {
+export const ColorModeBtn: React.FC<ColorModeBtnProps> = (props) => {
   const { toggleColorMode } = useColorMode();
   const SwitchIcon = useColorModeValue(<MoonIcon />, <SunIcon />);
   const switchToColorMode = useColorModeValue("dark", "light");
@@ -13,8 +18,9 @@ export const ColorModeBtn: React.FC<ColorModeBtnProps> = ({}) => {
     <IconButton
       aria-label={`Switch to ${switchToColorMode} mode`}
       icon={SwitchIcon}
-      variant="ghost"
+      colorScheme={"purple"}
       onClick={toggleColorMode}
+      {...props}
     />
   );
 };
