@@ -1,13 +1,24 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { Box, Button, Flex } from "@chakra-ui/react";
-import type { SandpackThemeProp } from "@codesandbox/sandpack-react";
+import { Box, Button, Flex, Select } from "@chakra-ui/react";
+import type { SandpackPredefinedTheme, SandpackThemeProp } from "@codesandbox/sandpack-react";
 import type { SandpackTypescriptProps } from "../components/sandpack-components/SandpackTypescript";
 
 import { ColorModeBtn } from "../components/ColorModeBtn";
 
 import AppCode from '!!raw-loader!../files/App.tsx';
 import ThemeCode from '!!raw-loader!../files/Theme.tsx';
+import { ForwardRefProps } from "../components/sandpack-components/CodeEditor";
+
+const PredefinedTheme: SandpackPredefinedTheme[] = [
+  "dark",
+  "light",
+  "sandpack-dark",
+  "night-owl",
+  "aqua-blue",
+  "github-light",
+  "monokai-pro",
+];
 
 const EditorLazyLoad = dynamic<SandpackTypescriptProps>(
   () =>
@@ -18,14 +29,41 @@ const EditorLazyLoad = dynamic<SandpackTypescriptProps>(
 );
 
 const IndexPage = () => {
-  const [theme, setTheme] = useState<SandpackThemeProp>("dark");
+  const codeEditorRef = useRef<ForwardRefProps>(null);
+  const [theme, setTheme] = useState<SandpackPredefinedTheme>(PredefinedTheme[0]);
 
-  const changeTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
+  const changeTheme = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newTheme = event.currentTarget.value as SandpackPredefinedTheme;
+    if (newTheme) {
+      setTheme(newTheme);
+    }
+  }, []);
+
+  const formatCode = useCallback(() => {
+    if (!codeEditorRef.current) return;
+    codeEditorRef.current.formatCode();
+  }, []);
   
   return (
     <Flex flexDirection={"column"}>
+      <Flex>
+        <Button onClick={formatCode} colorScheme={"messenger"}>
+          format code
+        </Button>
+        <ColorModeBtn />
+        <Select
+          defaultValue={PredefinedTheme[0]}
+          value={theme}
+          onChange={changeTheme}
+          width="150px"
+        >
+          {PredefinedTheme.map((theme) => (
+            <option key={theme} value={theme}>
+              {theme}
+            </option>
+          ))}
+        </Select>
+      </Flex>
       <Box>
         <EditorLazyLoad
           template="react-ts"
@@ -42,11 +80,8 @@ const IndexPage = () => {
             },
           }}
           theme={theme}
+          codeEditorRef={codeEditorRef}
         />
-      </Box>
-      <Box>
-        <Button onClick={changeTheme}>set sandpack theme</Button>
-        <ColorModeBtn />
       </Box>
     </Flex>
   );
