@@ -130,7 +130,9 @@
       lintSystem(entry);
     };
     const updateFile = (filePath, content) => {
-      env.updateFile(filePath, content);
+      if (env) {
+        env.updateFile(filePath, content);
+      }
     };
     const autocompleteAtPosition = (pos, filePath) => {
       let result = env.languageService.getCompletionsAtPosition(filePath, pos, {});

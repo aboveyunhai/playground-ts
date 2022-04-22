@@ -240,7 +240,9 @@ const isValidTypeModule = (key: string, value?: { module: { code: string } }) =>
   };
 
   const updateFile = (filePath: string, content: string) => {
-    env.updateFile(filePath, content);
+    if (env) {
+      env.updateFile(filePath, content);
+    }
   };
 
   const autocompleteAtPosition = (pos: number, filePath: string) => {
