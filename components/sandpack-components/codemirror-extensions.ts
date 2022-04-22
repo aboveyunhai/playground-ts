@@ -24,8 +24,7 @@ export const codemirrorTypescriptExtensions = (
         event: "updateText",
         details: {
           filePath,
-          // @ts-ignore
-          content: update.state.doc.text.join("\n"),
+          content: update.state.doc.toJSON().join("\n"),
         },
       });
     }, 150)
