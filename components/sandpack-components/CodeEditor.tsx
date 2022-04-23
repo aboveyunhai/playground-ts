@@ -6,61 +6,70 @@ import {
 
 import { EventEmitter } from "@okikio/emitter";
 import { codemirrorTypescriptExtensions } from "./codemirror-extensions";
-import React, { useEffect, useImperativeHandle } from "react";
+import React, { useCallback, useEffect, useImperativeHandle, useMemo } from "react";
 import type { MutableRefObject } from "react";
 import { format } from "prettier";
 import parserTypeScript from "prettier/parser-typescript";
 
 export interface CustomCodeEditorProps {
-  activePath?: string;
   tsServer: MutableRefObject<Worker>;
   emitter: MutableRefObject<EventEmitter>;
+  activePath: string;
 }
 
 export type ForwardRefProps = {
   formatCode: () => void;
+  updateFile: (path: string, code: string) => void;
 };
 
 const CodeEditorRef = React.forwardRef<
   ForwardRefProps,
   React.PropsWithChildren<CustomCodeEditorProps>
->(({ activePath, tsServer, emitter }, ref) => {
+>(({ tsServer, emitter, activePath }, ref) => {
   const { sandpack } = useSandpack();
-
-  const extensions = codemirrorTypescriptExtensions(
+  const { code: activeCode, updateCode } = useActiveCode();
+  const extensions = useMemo(() => codemirrorTypescriptExtensions(
     tsServer.current,
     emitter.current,
     activePath
+  ), [emitter, activePath, tsServer]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      formatCode() {
+        const formattedCode = format(activeCode, {
+          semi: false,
+          parser: "typescript",
+          plugins: [parserTypeScript],
+        });
+        sandpack.updateFile(activePath, formattedCode);
+      },
+      updateFile(path: string, code: string) {
+        if (path && code) {
+          sandpack.updateFile(path, code);
+        }
+      },
+    }),
+    [activeCode, activePath, sandpack]
   );
 
-  const { code, updateCode } = useActiveCode();
+  const getTypescriptCache = useCallback(() => {
+    const cache = new Map();
+    const keys = Object.keys(localStorage);
 
-  useImperativeHandle(ref, () => ({
-    formatCode() {
-      const formattedCode = format(code, {
-        semi: false,
-        parser: "typescript",
-        plugins: [parserTypeScript],
-      });
-      updateCode(formattedCode);
-    },
-  }));
+    keys.forEach((key) => {
+      if (key.startsWith("ts-lib-")) {
+        cache.set(key, localStorage.getItem(key));
+      }
+    });
 
-  useEffect(function init() {
-    emitter.current.on("ready", () => {
-      const getTypescriptCache = () => {
-        const cache = new Map();
-        const keys = Object.keys(localStorage);
+    return cache;
+  }, []);
 
-        keys.forEach((key) => {
-          if (key.startsWith("ts-lib-")) {
-            cache.set(key, localStorage.getItem(key));
-          }
-        });
-
-        return cache;
-      };
-
+  useEffect(() => {
+    const current = emitter.current;
+    current.on("ready", () => {
       tsServer.current.postMessage({
         event: "create-system",
         details: {
@@ -71,7 +80,7 @@ const CodeEditorRef = React.forwardRef<
       });
     });
 
-    emitter.current.on(
+    current.on(
       "cache-typescript-fsmap",
       ({ version, fsMap }: { version: string; fsMap: Map<string, string> }) => {
         fsMap.forEach((file, lib) => {
@@ -80,9 +89,22 @@ const CodeEditorRef = React.forwardRef<
         });
       }
     );
-  }, []);
 
-  return <SandpackCodeEditor showTabs extensions={extensions} />;
+    return () => {
+      current.off("ready");
+      current.off("cache-typescript-fsmap");
+    };
+  }, [emitter, getTypescriptCache, sandpack.activePath, sandpack.files, tsServer]);
+
+  return (
+    <SandpackCodeEditor
+      showTabs
+      extensions={extensions}
+      showLineNumbers={true}
+      showInlineErrors={true}
+    />
+  );
 });
 
+CodeEditorRef.displayName = "CodeEditorRef";
 export const CodeEditor = React.memo(CodeEditorRef);

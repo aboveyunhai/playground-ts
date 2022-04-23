@@ -8,10 +8,11 @@ import {
   SandpackThemeProvider,
   SandpackPredefinedTemplate,
   SandpackThemeProp,
+  SandpackReactDevTools,
 } from "@codesandbox/sandpack-react";
 import EventEmitter from "@okikio/emitter";
 import { useRef, useEffect } from "react";
-import { Preview } from "../Preview";
+// import { Preview } from "../Preview";
 import { CodeEditor, ForwardRefProps } from "./CodeEditor";
 
 export interface SandpackTypescriptProps {
@@ -30,7 +31,7 @@ export const SandpackTypescript: React.FC<SandpackTypescriptProps> = ({
   const tsServer = useRef<Worker>(null);
   const emitter = useRef<EventEmitter>(null);
 
-  useEffect(function listener() {
+  useEffect(() => {
     if (!tsServer.current) {
       tsServer.current = new Worker(
         new URL("./workers/tsserver.js", window.location.origin),
@@ -67,19 +68,19 @@ export const SandpackTypescript: React.FC<SandpackTypescriptProps> = ({
               tsServer.current &&
               emitter.current && (
                 <CodeEditor
-                  activePath={state?.activePath}
                   tsServer={tsServer}
                   emitter={emitter}
+                  activePath={state.activePath}
                   ref={codeEditorRef}
                 />
               )
             }
           </SandpackConsumer>
           {/* <Box padding={"10px"} width="500px"> */}
-            <SandpackPreview />
+          <SandpackPreview showOpenInCodeSandbox={false} />
           {/* </Box> */}
+          <SandpackReactDevTools />
         </SandpackLayout>
-        {/* <Preview /> */}
       </SandpackThemeProvider>
     </SandpackProvider>
   );
