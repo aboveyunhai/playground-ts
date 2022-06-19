@@ -14,25 +14,25 @@ import parserTypeScript from "prettier/parser-typescript";
 export interface CustomCodeEditorProps {
   tsServer: MutableRefObject<Worker>;
   emitter: MutableRefObject<EventEmitter>;
-  activePath: string;
+  activeFile: string;
 }
 
 export type ForwardRefProps = {
   formatCode: () => void;
-  updateFile: (path: string, code: string) => void;
+  updateFile: (file: string, code: string) => void;
 };
 
 const CodeEditorRef = React.forwardRef<
   ForwardRefProps,
   React.PropsWithChildren<CustomCodeEditorProps>
->(({ tsServer, emitter, activePath }, ref) => {
+>(({ tsServer, emitter, activeFile }, ref) => {
   const { sandpack } = useSandpack();
   const { code: activeCode, updateCode } = useActiveCode();
   const extensions = useMemo(() => codemirrorTypescriptExtensions(
     tsServer.current,
     emitter.current,
-    activePath
-  ), [emitter, activePath, tsServer]);
+    activeFile
+  ), [emitter, activeFile, tsServer]);
 
   useImperativeHandle(
     ref,
@@ -43,15 +43,15 @@ const CodeEditorRef = React.forwardRef<
           parser: "typescript",
           plugins: [parserTypeScript],
         });
-        sandpack.updateFile(activePath, formattedCode);
+        sandpack.updateFile(activeFile, formattedCode);
       },
-      updateFile(path: string, code: string) {
-        if (path && code) {
-          sandpack.updateFile(path, code);
+      updateFile(file: string, code: string) {
+        if (file && code) {
+          sandpack.updateFile(file, code);
         }
       },
     }),
-    [activeCode, activePath, sandpack]
+    [activeCode, activeFile, sandpack]
   );
 
   const getTypescriptCache = useCallback(() => {
@@ -74,7 +74,7 @@ const CodeEditorRef = React.forwardRef<
         event: "create-system",
         details: {
           files: sandpack.files,
-          entry: sandpack.activePath,
+          entry: sandpack.activeFile,
           fsMapCached: getTypescriptCache(),
         },
       });
@@ -94,7 +94,7 @@ const CodeEditorRef = React.forwardRef<
       current.off("ready");
       current.off("cache-typescript-fsmap");
     };
-  }, [emitter, getTypescriptCache, sandpack.activePath, sandpack.files, tsServer]);
+  }, [emitter, getTypescriptCache, sandpack.activeFile, sandpack.files, tsServer]);
 
   return (
     <SandpackCodeEditor

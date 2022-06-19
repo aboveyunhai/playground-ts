@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { Box, Button, Flex, Select } from "@chakra-ui/react";
-import type { SandpackPredefinedTheme, SandpackThemeProp } from "@codesandbox/sandpack-react";
-import type { SandpackTypescriptProps } from "../components/sandpack-components/SandpackTypescript";
+import { Box, Button, Flex, Select, useToast } from "@chakra-ui/react";
+import { Sandpack, SandpackPredefinedTheme } from "@codesandbox/sandpack-react";
+import { SandpackTypescript, SandpackTypescriptProps } from "../components/sandpack-components/SandpackTypescript";
 
 import { ColorModeBtn } from "../components/ColorModeBtn";
 
@@ -14,24 +14,13 @@ import { ForwardRefProps } from "../components/sandpack-components/CodeEditor";
 const PredefinedTheme: SandpackPredefinedTheme[] = [
   "dark",
   "light",
-  "sandpack-dark",
-  "night-owl",
-  "aqua-blue",
-  "github-light",
-  "monokai-pro",
+  "auto"
 ];
-
-const EditorLazyLoad = dynamic<SandpackTypescriptProps>(
-  () =>
-    import("../components/sandpack-components/SandpackTypescript").then(
-      (mod) => mod.SandpackTypescript
-    ),
-  { ssr: false }
-);
 
 const IndexPage = () => {
   const codeEditorRef = useRef<ForwardRefProps>(null);
   const [theme, setTheme] = useState<SandpackPredefinedTheme>(PredefinedTheme[0]);
+  const toast = useToast();
 
   const changeTheme = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
     const newTheme = event.currentTarget.value as SandpackPredefinedTheme;
@@ -42,7 +31,11 @@ const IndexPage = () => {
 
   const formatCode = useCallback(() => {
     if (!codeEditorRef.current) return;
-    codeEditorRef.current.formatCode();
+    try {
+      codeEditorRef.current.formatCode();
+    } catch (error) {
+      console.log(error);
+    }
   }, []);
 
   return (
@@ -62,7 +55,13 @@ const IndexPage = () => {
       </Flex>
       <Flex gap={"1rem"}>
         <Button
-          onClick={() => codeEditorRef.current.updateFile("/App.tsx", AppCode)}
+          onClick={() => {
+            try {
+              codeEditorRef.current.updateFile("/App.tsx", AppCode);
+            } catch (error) {
+              console.log(error);
+            }
+          }}
         >
           App
         </Button>
@@ -75,8 +74,12 @@ const IndexPage = () => {
         </Button>
       </Flex>
       <Box flex="auto">
-        <EditorLazyLoad
+        <SandpackTypescript
           template="react-ts"
+          files={{
+            "/App.tsx": { code: AppCode },
+            "/Theme.tsx": { code: ThemeCode },
+          }}
           customSetup={{
             dependencies: {
               "@chakra-ui/react": "latest",
@@ -84,10 +87,6 @@ const IndexPage = () => {
               "@emotion/react": "latest",
               "@emotion/styled": "latest",
               "framer-motion": "latest",
-            },
-            files: {
-              "/App.tsx": { code: AppCode },
-              "/Theme.tsx": { code: ThemeCode },
             },
           }}
           theme={theme}

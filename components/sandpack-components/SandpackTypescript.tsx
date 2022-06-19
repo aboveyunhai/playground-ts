@@ -9,6 +9,7 @@ import {
   SandpackPredefinedTemplate,
   SandpackThemeProp,
   SandpackReactDevTools,
+  SandpackFiles,
 } from "@codesandbox/sandpack-react";
 import EventEmitter from "@okikio/emitter";
 import { useRef, useEffect } from "react";
@@ -17,6 +18,7 @@ import { CodeEditor, ForwardRefProps } from "./CodeEditor";
 
 export interface SandpackTypescriptProps {
   customSetup: SandpackSetup;
+  files: SandpackFiles; 
   template: SandpackPredefinedTemplate;
   theme?: SandpackThemeProp;
   codeEditorRef?: React.MutableRefObject<ForwardRefProps>;
@@ -25,6 +27,7 @@ export interface SandpackTypescriptProps {
 export const SandpackTypescript: React.FC<SandpackTypescriptProps> = ({
   customSetup,
   template,
+  files,
   theme,
   codeEditorRef,
 }) => {
@@ -60,9 +63,9 @@ export const SandpackTypescript: React.FC<SandpackTypescriptProps> = ({
   }, []);
 
   return (
-    <SandpackProvider template={template} customSetup={customSetup}>
-      <SandpackThemeProvider>
-        <SandpackLayout theme={theme}>
+    <SandpackProvider template={template} customSetup={customSetup} files={files}>
+      <SandpackThemeProvider theme={theme}>
+        <SandpackLayout>
           <SandpackConsumer>
             {(state) =>
               tsServer.current &&
@@ -70,7 +73,7 @@ export const SandpackTypescript: React.FC<SandpackTypescriptProps> = ({
                 <CodeEditor
                   tsServer={tsServer}
                   emitter={emitter}
-                  activePath={state.activePath}
+                  activeFile={state.activeFile}
                   ref={codeEditorRef}
                 />
               )
