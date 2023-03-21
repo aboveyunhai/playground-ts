@@ -18,7 +18,7 @@ import { CodeEditor, ForwardRefProps } from "./CodeEditor";
 
 export interface SandpackTypescriptProps {
   customSetup: SandpackSetup;
-  files: SandpackFiles; 
+  files: SandpackFiles;
   template: SandpackPredefinedTemplate;
   theme?: SandpackThemeProp;
   codeEditorRef?: React.MutableRefObject<ForwardRefProps>;
@@ -63,7 +63,11 @@ export const SandpackTypescript: React.FC<SandpackTypescriptProps> = ({
   }, []);
 
   return (
-    <SandpackProvider template={template} customSetup={customSetup} files={files}>
+    <SandpackProvider
+      template={template}
+      customSetup={customSetup}
+      files={files}
+    >
       <SandpackThemeProvider theme={theme}>
         <SandpackLayout>
           <SandpackConsumer>
@@ -79,10 +83,8 @@ export const SandpackTypescript: React.FC<SandpackTypescriptProps> = ({
               )
             }
           </SandpackConsumer>
-          {/* <Box padding={"10px"} width="500px"> */}
           <SandpackPreview showOpenInCodeSandbox={false} />
-          {/* </Box> */}
-          <SandpackReactDevTools />
+          <SandpackReactDevTools theme={theme === "dark" ? theme : "light"} />
         </SandpackLayout>
       </SandpackThemeProvider>
     </SandpackProvider>
