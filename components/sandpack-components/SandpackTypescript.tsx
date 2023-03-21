@@ -84,7 +84,7 @@ export const SandpackTypescript: React.FC<SandpackTypescriptProps> = ({
             }
           </SandpackConsumer>
           <SandpackPreview showOpenInCodeSandbox={false} />
-          <SandpackReactDevTools theme={theme === "dark" ? theme : "light"} />
+          <SandpackReactDevTools theme={theme === "dark" ? "dark" : "light"} />
         </SandpackLayout>
       </SandpackThemeProvider>
     </SandpackProvider>
